@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sap.io - Pulando caminhos.</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2d4d3c",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#121815",
+                        "forest-accent": "#45544c",
+                        "leaf-green": "#a5b6ad",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Newsreader", "serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Newsreader', serif;
+        }
+        .vine-decoration {
+            pointer-events: none;
+            position: absolute;
+            z-index: 0;
+            opacity: 0.15;
+        }
+        @keyframes sprout {
+            0% { transform: scale(.8); opacity: 0 }
+            60% { transform: scale(1.05); opacity: 1 }
+            100% { transform: scale(1) }
+        }
+        .sprout { animation: sprout .6s ease-out }
+        #toast {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(45,77,60,.95);
+            padding: 10px 18px; border-radius: 999px;
+            opacity: 0; transition: .3s; z-index: 200;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .tooltip-container {
+            position: relative;
+        }
+        .tooltip-container::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #2d4d3c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .tooltip-container:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        .url-error {
+            border: 2px solid #ef4444 !important;
+            animation: shake 0.3s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-white min-h-screen flex flex-col relative overflow-x-hidden font-display">
+
+<div id="toast" class="backdrop-blur-md border border-primary/30 text-white">Copiado 🌱</div>
+
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute top-0 left-0 w-full flex justify-between px-10 opacity-20 pointer-events-none">
+        <span class="material-symbols-outlined text-8xl -mt-8 text-primary rotate-180">eco</span>
+        <span class="material-symbols-outlined text-9xl -mt-12 text-primary rotate-180">nest_eco_leaf</span>
+        <span class="material-symbols-outlined text-7xl -mt-4 text-primary rotate-180">spa</span>
+    </div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-radial-gradient from-transparent via-background-dark/20 to-background-dark/80 pointer-events-none"></div>
+</div>
+
+<div class="layout-container flex h-full grow flex-col z-10 relative">
+    <header class="flex items-center justify-between px-6 md:px-20 py-6 border-b border-white/5 bg-background-dark/50 backdrop-blur-sm">
+        <div class="flex items-center gap-3 text-white">
+            <img
+                src="assets/froglet_frog_green_idle_by_phewcumber.gif"
+                alt="Sap.io mascot"
+                class="w-10 h-10 object-contain"
+                style="image-rendering: pixelated;"
+            />
+            <h2 class="text-white text-2xl font-bold tracking-tight">sap.io</h2>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-12">
+        <div class="max-w-[800px] w-full flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div class="mb-8 relative group flex justify-center">
+                <div class="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all"></div>
+                <div class="relative w-24 h-24 flex items-center justify-center">
+                    <img
+                        id="frog-mascot"
+                        alt="Sap.io mascot"
+                        class="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110"\
+                        style="image-rendering: pixelated;"
+                    />
+                </div>
+            </div>
+
+            <h1 class="text-white text-4xl md:text-6xl font-bold text-center mb-4 tracking-tight leading-tight px-4">
+                Encurte seus links <br/><span class="text-primary italic font-medium">sapiamente</span>
+            </h1>
+
+            <p class="text-leaf-green text-lg md:text-xl text-center mb-12 max-w-lg">
+                Transforme URLs complexas em caminhos curtos, preservando a essência do seu conteúdo.
+            </p>
+
+            <div class="w-full max-w-2xl bg-[#1a231f]/80 backdrop-blur-md p-2 rounded-2xl border border-primary/30 shadow-2xl rounded-[2.5rem]">
+                <div class="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
+                    <div class="relative flex-1 group">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
+                            <span class="material-symbols-outlined">link</span>
+                        </div>
+                        <input id="url-input" class="w-full bg-[#121815] border-none rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-leaf-green/50 focus:ring-2 focus:ring-primary text-lg transition-all" placeholder="https://exemplo.com/artigo-muito-longo" type="url"/>
+                    </div>
+
+                    <div class="relative group/select flex flex-col items-center justify-center">
+                        <button id="expiry-display" class="w-14 h-14 hover:bg-primary/40 border-2 border-primary/40 rounded-full flex flex-col items-center justify-center transition-all duration-300 group-hover/select:scale-110 relative overflow-hidden shadow-inner bg-primary">
+                            <span class="material-symbols-outlined text-white text-2xl">schedule</span>
+                            <span id="expiry-text" class="text-[10px] font-bold text-white mt-[-2px]">1h</span>
+                        </button>
+                        <select id="expiry-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <option value="3600" selected>1 hora</option>
+                            <option value="86400">1 dia</option>
+                            <option value="604800">7 dias</option>
+                        </select>
+                    </div>
+
+                    <button id="shorten-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-10 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg">
+                        <span class="material-symbols-outlined">magic_button</span>
+                        <span>Encurtar</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="results-section" class="hidden mt-8 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 sprout">
+                <div class="bg-primary/10 border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex flex-col">
+                        <span class="text-leaf-green text-sm uppercase tracking-widest font-semibold mb-1">Seu novo link:</span>
+                        <span id="short-url" class="text-white text-2xl font-bold break-all">sap.io/s/floresta-magica</span>
+                    </div>
+
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Ir para o link">
+                            <button id="go-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Abrir link">
+                                <span class="material-symbols-outlined text-primary">open_in_new</span>
+                                <span class="md:hidden">Ir</span>
+                            </button>
+                        </div>
+
+                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Copiar Link">
+                            <button id="copy-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Copiar">
+                                <span class="material-symbols-outlined text-primary">content_copy</span>
+                                <span class="md:hidden">Copiar</span>
+                            </button>
+                        </div>
+
+                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Compartilhar">
+                            <button id="share-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Compartilhar">
+                                <span class="material-symbols-outlined text-primary">share</span>
+                                <span class="md:hidden">Compartilhar</span>
+                            </button>
+                        </div>
+
+                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Ver QR Code">
+                            <button id="qr-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="QR Code">
+                                <span class="material-symbols-outlined text-primary">qr_code_2</span>
+                                <span class="md:hidden">QR</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-16 flex items-center gap-4 text-primary/40">
+                <span class="material-symbols-outlined">emoji_nature</span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] z-50 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]"></div>
+
+<div class="fixed inset-0 z-[100] hidden items-center justify-center p-4" id="qr-modal">
+    <div class="absolute inset-0 bg-background-dark/80 backdrop-blur-md" onclick="document.getElementById('qr-modal').classList.add('hidden')"></div>
+    <div class="relative bg-[#1a231f] border border-primary/30 rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200">
+        <h3 class="text-2xl font-bold mb-6 text-white">QR Code do Link</h3>
+        <div class="bg-white p-4 rounded-2xl mb-6 mx-auto w-fit shadow-inner">
+            <img id="qr-image" alt="QR Code" class="w-48 h-48" src=""/>
+        </div>
+        <p id="qr-link-text" class="text-leaf-green mb-8 break-all">sap.io/s/floresta-magica</p>
+        <button id="download-qr" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
+            <span class="material-symbols-outlined">download</span>
+            Baixar QR Code
+        </button>
+        <button id="close-modal" class="mt-4 text-leaf-green/60 hover:text-leaf-green text-sm">Fechar</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const shortenBtn = document.getElementById('shorten-btn');
+    const input = document.getElementById('url-input');
+    const results = document.getElementById('results-section');
+    const shortUrlText = document.getElementById('short-url');
+    const qrImage = document.getElementById('qr-image');
+    const qrLinkText = document.getElementById('qr-link-text');
+    const toast = document.getElementById('toast');
+    const expirySelect = document.getElementById('expiry-select');
+    const expiryText = document.getElementById('expiry-text');
+
+    let currentShortUrl = "";
+
+    const showToast = (msg) => {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    };
+
+    // Função de validação de URL
+    const isValidUrl = (string) => {
+        try {
+            const url = new URL(string);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+            return false;
+        }
+    };
+
+    // Função para formatar URL (adicionar https:// se necessário)
+    const formatUrl = (string) => {
+        string = string.trim();
+        if (!string) return '';
+        
+        // Se já tem protocolo, retorna como está
+        if (string.startsWith('http://') || string.startsWith('https://')) {
+            return string;
+        }
+        
+        // Se não tem protocolo, adiciona https://
+        return 'https://' + string;
+    };
+
+    input.addEventListener('input', () => {
+        input.classList.remove('url-error');
+    });
+
+    input.addEventListener('blur', () => {
+        const url = input.value.trim();
+        if (url && !isValidUrl(formatUrl(url))) {
+            input.classList.add('url-error');
+            showToast("URL inválida 🌱");
+        } else {
+            input.classList.remove('url-error');
+        }
+    });
+
+    expirySelect.addEventListener('change', (e) => {
+        const value = e.target.value;
+        if (value === '3600') expiryText.textContent = '1h';
+        else if (value === '86400') expiryText.textContent = '1d';
+        else if (value === '604800') expiryText.textContent = '7d';
+    });
+
+    shortenBtn.onclick = async () => {
+        let url = input.value.trim();
+        
+        if (!url) {
+            showToast("Digite um link 🌿");
+            input.classList.add('url-error');
+            input.focus();
+            return;
+        }
+
+        url = formatUrl(url);
+
+        if (!isValidUrl(url)) {
+            showToast("URL inválida 🌱");
+            input.classList.add('url-error');
+            input.focus();
+            return;
+        }
+
+        try {
+            const urlObj = new URL(url);
+            if (!urlObj.hostname.includes('.')) {
+                showToast("Domínio inválido 🌱");
+                input.classList.add('url-error');
+                input.focus();
+                return;
+            }
+        } catch {
+            showToast("URL inválida 🌱");
+            input.classList.add('url-error');
+            input.focus();
+            return;
+        }
+
+        input.classList.remove('url-error');
+
+        shortenBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span><span>Semeando...</span>';
+        shortenBtn.disabled = true;
+
+        try {
+            const res = await fetch('/api/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    url, 
+                    expiresIn: parseInt(expirySelect.value) 
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.shortUrl) {
+                currentShortUrl = data.shortUrl;
+                shortUrlText.textContent = currentShortUrl;
+                results.classList.remove('hidden');
+                input.value = "";
+
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=2d4d3c&bgcolor=ffffff&data=${encodeURIComponent(currentShortUrl)}`;
+                qrLinkText.textContent = currentShortUrl;
+                
+                // Scroll suave até os resultados
+                results.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                showToast("Erro ao encurtar link 🌱");
+            }
+        } catch (error) {
+            showToast("Erro na conexão 🌱");
+            console.error(error);
+        } finally {
+            shortenBtn.innerHTML = '<span class="material-symbols-outlined">magic_button</span><span>Encurtar</span>';
+            shortenBtn.disabled = false;
+        }
+    };
+
+    document.getElementById('copy-btn').onclick = () => {
+        if (!currentShortUrl) return;
+        navigator.clipboard.writeText(currentShortUrl);
+        showToast("Link copiado 🌿");
+    };
+
+    document.getElementById('share-btn').onclick = async () => {
+        if (!currentShortUrl) return;
+        
+        const message = `🌿 Encurtei um link com Sap.io\nPule caminhos com simplicidade:\n${currentShortUrl}`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Sap.io Link",
+                    text: message,
+                    url: currentShortUrl
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    navigator.clipboard.writeText(message);
+                    showToast("Mensagem copiada 🌱");
+                }
+            }
+        } else {
+            navigator.clipboard.writeText(message);
+            showToast("Mensagem copiada 🌱");
+        }
+    };
+
+    document.getElementById('go-btn').onclick = () => {
+        if (!currentShortUrl) return;
+        window.open(currentShortUrl, '_blank');
+    };
+
+    document.getElementById('qr-btn').onclick = () => {
+        if (!currentShortUrl) {
+            showToast("Encurte um link primeiro 🌱");
+            return;
+        }
+        document.getElementById('qr-modal').classList.remove('hidden');
+        document.getElementById('qr-modal').classList.add('flex');
+    };
+
+    document.getElementById('download-qr').onclick = async () => {
+        if (!qrImage.src || !currentShortUrl) {
+            showToast("Nenhum QR disponível 🌱");
+            return;
+        }
+
+        try {
+            const response = await fetch(qrImage.src);
+            const blob = await response.blob();
+
+            const slug = currentShortUrl.split('/').pop();
+            
+            const filename = `sap.io-${slug}.png`;
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+            showToast("QR Code baixado 🌿");
+        } catch (err) {
+            console.error("Erro ao baixar QR:", err);
+            showToast("Erro ao baixar 🌱");
+        }
+    };
+
+    document.getElementById('close-modal').onclick = () => {
+        document.getElementById('qr-modal').classList.add('hidden');
+    };
+
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            shortenBtn.click();
+        }
+    });
+
+    const updateExpiryLabel = () => {
+        const value = parseInt(expirySelect.value);
+        if (value === 3600) expiryText.textContent = "1h";
+        else if (value === 86400) expiryText.textContent = "1d";
+        else if (value === 604800) expiryText.textContent = "7d";
+    };
+    
+    expirySelect.addEventListener("change", updateExpiryLabel);
+    updateExpiryLabel();
+
+    const frog = document.getElementById("frog-mascot");
+    const gifs = [
+        "assets/froglet_frog_green_idle_by_phewcumber.gif",
+        "assets/froglet_frog_green_jump_by_phewcumber.gif",
+        "assets/froglet_frog_green_croak_by_phewcumber.gif",
+        "assets/froglet_frog_green_attack_by_phewcumber.gif"
+    ];
+    const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
+    frog.src = randomGif;
+});
+</script>
+</body>
+</html>
