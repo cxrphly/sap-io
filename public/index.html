@@ -2,7 +2,7 @@
 <html class="dark" lang="pt-BR">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" name="viewport"/>
     <title>Sap.io - Pulando caminhos.</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet"/>
@@ -29,6 +29,14 @@
                         "xl": "1.5rem",
                         "full": "9999px"
                     },
+                    screens: {
+                        'xs': '375px',
+                        'sm': '640px',
+                        'md': '768px',
+                        'lg': '1024px',
+                        'xl': '1280px',
+                        '2xl': '1536px',
+                    }
                 },
             },
         }
@@ -36,6 +44,7 @@
     <style>
         body {
             font-family: 'Newsreader', serif;
+            -webkit-tap-highlight-color: transparent;
         }
         .vine-decoration {
             pointer-events: none;
@@ -55,6 +64,10 @@
             background: rgba(45,77,60,.95);
             padding: 10px 18px; border-radius: 999px;
             opacity: 0; transition: .3s; z-index: 200;
+            white-space: nowrap;
+            max-width: 90vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .tooltip-container {
@@ -84,6 +97,11 @@
             visibility: visible;
             transform: translateX(-50%) translateY(0);
         }
+        @media (max-width: 768px) {
+            .tooltip-container::after {
+                display: none;
+            }
+        }
         .url-error {
             border: 2px solid #ef4444 !important;
             animation: shake 0.3s ease-in-out;
@@ -93,16 +111,103 @@
             25% { transform: translateX(5px); }
             75% { transform: translateX(-5px); }
         }
+        input, button {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        select {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+        }
+        
+        .expiry-select-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .expiry-select-container select {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        @media (max-width: 640px) {
+            .expiry-select-container {
+                width: 100%;
+            }
+            
+            #expiry-display-mobile {
+                width: 100%;
+                background: linear-gradient(145deg, #1a231f, #0f1512);
+                border: 1px solid rgba(45, 77, 60, 0.5);
+                transition: all 0.2s ease;
+            }
+            
+            #expiry-display-mobile:active {
+                transform: scale(0.98);
+                background: #1f2b24;
+            }
+            
+            #expiry-display-mobile .material-symbols-outlined {
+                color: #a5b6ad;
+            }
+            
+            .expiry-select-container::after {
+                display: none;
+            }
+        }
+        
+        input[type="url"] {
+            font-size: 16px !important;
+        }
+        @media (max-width: 640px) {
+            h1 {
+                word-break: break-word;
+                hyphens: auto;
+            }
+            #short-url {
+                font-size: 1.25rem;
+                word-break: break-all;
+            }
+            .rounded-\[2\.5rem\] {
+                border-radius: 1.5rem;
+            }
+        }
+        @media (max-width: 375px) {
+            .text-4xl {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-white min-h-screen flex flex-col relative overflow-x-hidden font-display">
     
-<div id="warning-wrapper" class="fixed top-0 inset-x-0 flex justify-center z-50 pointer-events-none">
-    <div id="warning" class="mt-[max(1rem,env(safe-area-inset-top))] hidden pointer-events-auto flex items-center gap-3 bg-[#1a231f] border border-primary/40 rounded-xl md:rounded-2xl px-4 py-3 md:px-6 md:py-4 shadow-2xl backdrop-blur-md w-[92%] max-w-md transform transition-all duration-300 opacity-0 -translate-y-4">
+<div id="warning-wrapper" class="fixed top-0 inset-x-0 flex justify-center z-50 pointer-events-none px-4">
+    <div id="warning" class="mt-[max(1rem,env(safe-area-inset-top))] hidden pointer-events-auto flex items-center gap-3 bg-[#1a231f] border border-primary/40 rounded-xl md:rounded-2xl px-4 py-3 md:px-6 md:py-4 shadow-2xl backdrop-blur-md w-full max-w-md transform transition-all duration-300 opacity-0 -translate-y-4">
         <img src="assets/froglet_frog_green_death_by_phewcumber.gif" class="w-10 h-10 md:w-12 md:h-12 object-contain shrink-0" style="image-rendering: pixelated;" />
-        <div class="leading-tight">
-            <p id="warning-text" class="text-white font-semibold text-sm md:text-base">Link expirado 🌿</p>
-            <p class="text-leaf-green text-xs md:text-sm">O sapinho não conseguiu saltar.</p>
+        <div class="leading-tight min-w-0 flex-1">
+            <p id="warning-text" class="text-white font-semibold text-sm md:text-base truncate">Link expirado 🌿</p>
+            <p class="text-leaf-green text-xs md:text-sm truncate">O sapinho não conseguiu saltar.</p>
         </div>
     </div>
 </div>
@@ -110,108 +215,129 @@
 <div id="toast" class="backdrop-blur-md border border-primary/30 text-white">Copiado 🌱</div>
 
 <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute top-0 left-0 w-full flex justify-between px-10 opacity-20 pointer-events-none">
-        <span class="material-symbols-outlined text-8xl -mt-8 text-primary rotate-180">eco</span>
-        <span class="material-symbols-outlined text-9xl -mt-12 text-primary rotate-180">nest_eco_leaf</span>
-        <span class="material-symbols-outlined text-7xl -mt-4 text-primary rotate-180">spa</span>
+    <div class="absolute top-0 left-0 w-full flex justify-between px-4 sm:px-10 opacity-10 sm:opacity-20 pointer-events-none">
+        <span class="material-symbols-outlined text-6xl sm:text-8xl -mt-8 text-primary rotate-180">eco</span>
+        <span class="material-symbols-outlined text-7xl sm:text-9xl -mt-12 text-primary rotate-180 hidden xs:block">nest_eco_leaf</span>
+        <span class="material-symbols-outlined text-5xl sm:text-7xl -mt-4 text-primary rotate-180 hidden sm:block">spa</span>
     </div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-radial-gradient from-transparent via-background-dark/20 to-background-dark/80 pointer-events-none"></div>
 </div>
 
 <div class="layout-container flex h-full grow flex-col z-10 relative">
-    <header class="flex items-center justify-between px-6 md:px-20 py-6 border-b border-white/5 bg-background-dark/50 backdrop-blur-sm">
-        <div class="flex items-center gap-3 text-white">
-            <img src="assets/froglet_frog_green_idle_by_phewcumber.gif" alt="Sap.io mascot" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
-            <h2 class="text-white text-2xl font-bold tracking-tight">sap.io</h2>
+    <header class="flex items-center justify-between px-4 sm:px-6 md:px-20 py-4 sm:py-6 border-b border-white/5 bg-background-dark/50 backdrop-blur-sm">
+        <div class="flex items-center gap-2 sm:gap-3 text-white">
+            <img src="assets/froglet_frog_green_idle_by_phewcumber.gif" alt="Sap.io mascot" class="w-8 h-8 sm:w-10 sm:h-10 object-contain" style="image-rendering: pixelated;" />
+            <h2 class="text-white text-xl sm:text-2xl font-bold tracking-tight">sap.io</h2>
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center px-4 py-12">
+    <main class="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
         <div class="max-w-[800px] w-full flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div class="mb-8 relative group flex justify-center">
+            <div class="mb-6 sm:mb-8 relative group flex justify-center">
                 <div class="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all"></div>
-                <div class="relative w-24 h-24 flex items-center justify-center">
-                    <img id="frog-mascot" alt="Sap.io mascot" class="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" style="image-rendering: pixelated;" />
+                <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+                    <img id="frog-mascot" alt="Sap.io mascot" class="w-16 h-16 sm:w-20 sm:h-20 object-contain transition-transform duration-300 group-hover:scale-110" style="image-rendering: pixelated;" />
                 </div>
             </div>
 
-            <h1 class="text-white text-4xl md:text-6xl font-bold text-center mb-4 tracking-tight leading-tight px-4">
+            <h1 class="text-white text-3xl xs:text-4xl md:text-6xl font-bold text-center mb-3 sm:mb-4 tracking-tight leading-tight px-4">
                 Encurte seus links <br/><span class="text-primary italic font-medium">sapiamente</span>
             </h1>
 
-            <p class="text-leaf-green text-lg md:text-xl text-center mb-12 max-w-lg">
+            <p class="text-leaf-green text-base sm:text-lg md:text-xl text-center mb-8 sm:mb-12 max-w-lg px-4">
                 Transforme URLs complexas em caminhos curtos, preservando a essência do seu conteúdo.
             </p>
 
-            <div class="w-full max-w-2xl bg-[#1a231f]/80 backdrop-blur-md p-2 rounded-2xl border border-primary/30 shadow-2xl rounded-[2.5rem]">
-                <div class="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
+            <div class="w-full max-w-2xl bg-[#1a231f]/80 backdrop-blur-md p-3 sm:p-2 rounded-2xl border border-primary/30 shadow-2xl rounded-2xl sm:rounded-[2.5rem]">
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-2 items-stretch sm:items-center">
                     <div class="relative flex-1 group">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
-                            <span class="material-symbols-outlined">link</span>
+                        <div class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-primary">
+                            <span class="material-symbols-outlined text-xl sm:text-2xl">link</span>
                         </div>
-                        <input id="url-input" class="w-full bg-[#121815] border-none rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-leaf-green/50 focus:ring-2 focus:ring-primary text-lg transition-all" placeholder="https://exemplo.com/artigo-muito-longo" type="url"/>
+                        <input id="url-input" class="w-full bg-[#121815] border-none rounded-xl sm:rounded-xl py-3 sm:py-4 pl-10 sm:pl-12 pr-3 sm:pr-4 text-white placeholder:text-leaf-green/50 focus:ring-2 focus:ring-primary text-base sm:text-lg transition-all" placeholder="https://exemplo.com/artigo-muito-longo" type="url"/>
                     </div>
 
-                    <div class="relative group/select flex flex-col items-center justify-center">
-                        <button id="expiry-display" class="w-14 h-14 hover:bg-primary/40 border-2 border-primary/40 rounded-full flex flex-col items-center justify-center transition-all duration-300 group-hover/select:scale-110 relative overflow-hidden shadow-inner bg-primary">
-                            <span class="material-symbols-outlined text-white text-2xl">schedule</span>
-                            <span id="expiry-text" class="text-[10px] font-bold text-white mt-[-2px]">1h</span>
-                        </button>
-                        <select id="expiry-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            <option value="3600" selected>1 hora</option>
-                            <option value="86400">1 dia</option>
-                            <option value="604800">7 dias</option>
-                        </select>
+                    <div class="expiry-select-container w-full sm:w-auto">
+                        <div class="sm:hidden w-full">
+                            <button id="expiry-display-mobile" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-full flex items-center justify-between gap-2 transition-all border-2 border-primary/40 shadow-lg">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-xl">schedule</span>
+                                    <span class="font-medium">Expira em:</span>
+                                </div>
+                                <div class="flex items-center gap-1 bg-primary/30 py-1 px-3 rounded-full">
+                                    <span id="expiry-text-mobile" class="font-bold">1 hora</span>
+                                    <span class="material-symbols-outlined text-xl">expand_more</span>
+                                </div>
+                            </button>
+                            <select id="expiry-select-mobile" class="hidden">
+                                <option value="3600" selected>1 hora</option>
+                                <option value="86400">1 dia</option>
+                                <option value="604800">7 dias</option>
+                            </select>
+                        </div>
+
+                        <div class="hidden sm:block relative">
+                            <button id="expiry-display" class="w-14 h-14 hover:bg-primary/40 border-2 border-primary/40 rounded-full flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden shadow-inner bg-primary">
+                                <span class="material-symbols-outlined text-white text-2xl">schedule</span>
+                                <span id="expiry-text" class="text-[10px] font-bold text-white mt-[-2px]">1h</span>
+                            </button>
+                            <select id="expiry-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <option value="3600" selected>1 hora</option>
+                                <option value="86400">1 dia</option>
+                                <option value="604800">7 dias</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <button id="shorten-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-10 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg">
-                        <span class="material-symbols-outlined">magic_button</span>
-                        <span>Encurtar</span>
+                    <button id="shorten-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-full flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg text-sm sm:text-base whitespace-nowrap">
+                        <span class="material-symbols-outlined text-xl sm:text-2xl">magic_button</span>
+                        <span class="hidden xs:inline">Encurtar</span>
+                        <span class="xs:hidden">Ok</span>
                     </button>
                 </div>
             </div>
 
-            <div id="results-section" class="hidden mt-8 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 sprout">
-                <div class="bg-primary/10 border border-primary/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div class="flex flex-col">
-                        <span class="text-leaf-green text-sm uppercase tracking-widest font-semibold mb-1">Seu novo link:</span>
-                        <span id="short-url" class="text-white text-2xl font-bold break-all">sap.io/8zm062</span>
+            <div id="results-section" class="hidden mt-6 sm:mt-8 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700 sprout">
+                <div class="bg-primary/10 border border-primary/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                    <div class="flex flex-col w-full sm:w-auto min-w-0">
+                        <span class="text-leaf-green text-xs sm:text-sm uppercase tracking-widest font-semibold mb-1">Seu novo link:</span>
+                        <span id="short-url" class="text-white text-lg sm:text-2xl font-bold break-all">sap.io/8zm062</span>
                     </div>
 
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Ir para o link">
-                            <button id="go-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Abrir link">
-                                <span class="material-symbols-outlined text-primary">open_in_new</span>
-                                <span class="md:hidden">Ir</span>
+                    <div class="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+                        <div class="tooltip-container flex-1 sm:flex-none" data-tooltip="Ir para o link">
+                            <button id="go-btn" class="w-full p-2 sm:p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Abrir link">
+                                <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">open_in_new</span>
+                                <span class="sm:hidden text-sm">Ir</span>
                             </button>
                         </div>
 
-                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Copiar Link">
-                            <button id="copy-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Copiar">
-                                <span class="material-symbols-outlined text-primary">content_copy</span>
-                                <span class="md:hidden">Copiar</span>
+                        <div class="tooltip-container flex-1 sm:flex-none" data-tooltip="Copiar Link">
+                            <button id="copy-btn" class="w-full p-2 sm:p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Copiar">
+                                <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">content_copy</span>
+                                <span class="sm:hidden text-sm">Copiar</span>
                             </button>
                         </div>
 
-                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Compartilhar">
-                            <button id="share-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Compartilhar">
-                                <span class="material-symbols-outlined text-primary">share</span>
-                                <span class="md:hidden">Compartilhar</span>
+                        <div class="tooltip-container flex-1 sm:flex-none" data-tooltip="Compartilhar">
+                            <button id="share-btn" class="w-full p-2 sm:p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="Compartilhar">
+                                <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">share</span>
+                                <span class="sm:hidden text-sm">Compart.</span>
                             </button>
                         </div>
 
-                        <div class="tooltip-container flex-1 md:flex-none" data-tooltip="Ver QR Code">
-                            <button id="qr-btn" class="w-full p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="QR Code">
-                                <span class="material-symbols-outlined text-primary">qr_code_2</span>
-                                <span class="md:hidden">QR</span>
+                        <div class="tooltip-container flex-1 sm:flex-none" data-tooltip="Ver QR Code">
+                            <button id="qr-btn" class="w-full p-2 sm:p-3 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center justify-center gap-2 border border-white/10" title="QR Code">
+                                <span class="material-symbols-outlined text-primary text-xl sm:text-2xl">qr_code_2</span>
+                                <span class="sm:hidden text-sm">QR</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-16 flex items-center gap-4 text-primary/40">
-                <span class="material-symbols-outlined">emoji_nature</span>
+            <div class="mt-12 sm:mt-16 flex items-center gap-4 text-primary/40">
+                <span class="material-symbols-outlined text-2xl sm:text-3xl">emoji_nature</span>
             </div>
         </div>
     </main>
@@ -221,17 +347,17 @@
 
 <div class="fixed inset-0 z-[100] hidden items-center justify-center p-4" id="qr-modal">
     <div class="absolute inset-0 bg-background-dark/80 backdrop-blur-md" onclick="document.getElementById('qr-modal').classList.add('hidden')"></div>
-    <div class="relative bg-[#1a231f] border border-primary/30 rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200">
-        <h3 class="text-2xl font-bold mb-6 text-white">QR Code do Link</h3>
-        <div class="bg-white p-4 rounded-2xl mb-6 mx-auto w-fit shadow-inner">
-            <img id="qr-image" alt="QR Code" class="w-48 h-48" src=""/>
+    <div class="relative bg-[#1a231f] border border-primary/30 rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-200 mx-4">
+        <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">QR Code do Link</h3>
+        <div class="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 mx-auto w-fit shadow-inner">
+            <img id="qr-image" alt="QR Code" class="w-40 h-40 sm:w-48 sm:h-48" src=""/>
         </div>
-        <p id="qr-link-text" class="text-leaf-green mb-8 break-all">sap.io/8zm062</p>
-        <button id="download-qr" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-            <span class="material-symbols-outlined">download</span>
+        <p id="qr-link-text" class="text-leaf-green mb-6 sm:mb-8 break-all text-sm sm:text-base">sap.io/8zm062</p>
+        <button id="download-qr" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 sm:py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 text-sm sm:text-base">
+            <span class="material-symbols-outlined text-xl">download</span>
             Baixar QR Code
         </button>
-        <button id="close-modal" class="mt-4 text-leaf-green/60 hover:text-leaf-green text-sm">Fechar</button>
+        <button id="close-modal" class="mt-3 sm:mt-4 text-leaf-green/60 hover:text-leaf-green text-xs sm:text-sm">Fechar</button>
     </div>
 </div>
 
@@ -244,8 +370,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrImage = document.getElementById('qr-image');
     const qrLinkText = document.getElementById('qr-link-text');
     const toast = document.getElementById('toast');
+    
     const expirySelect = document.getElementById('expiry-select');
+    const expirySelectMobile = document.getElementById('expiry-select-mobile');
     const expiryText = document.getElementById('expiry-text');
+    const expiryTextMobile = document.getElementById('expiry-text-mobile');
+    const expiryDisplay = document.getElementById('expiry-display');
+    const expiryDisplayMobile = document.getElementById('expiry-display-mobile');
 
     let currentShortUrl = "";
 
@@ -275,6 +406,79 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'https://' + string;
     };
 
+    const updateExpiryLabels = () => {
+        if (expirySelect && expiryText) {
+            const desktopValue = expirySelect.value;
+            if (desktopValue === '3600') expiryText.textContent = '1h';
+            else if (desktopValue === '86400') expiryText.textContent = '1d';
+            else if (desktopValue === '604800') expiryText.textContent = '7d';
+        }
+        
+        if (expirySelectMobile && expiryTextMobile) {
+            const mobileValue = expirySelectMobile.value;
+            if (mobileValue === '3600') expiryTextMobile.textContent = '1 hora';
+            else if (mobileValue === '86400') expiryTextMobile.textContent = '1 dia';
+            else if (mobileValue === '604800') expiryTextMobile.textContent = '7 dias';
+        }
+    };
+
+    const syncSelects = (source, target) => {
+        if (source && target) {
+            target.value = source.value;
+            updateExpiryLabels();
+        }
+    };
+
+    if (expirySelect) {
+        expirySelect.addEventListener('change', (e) => {
+            syncSelects(expirySelect, expirySelectMobile);
+        });
+    }
+
+    if (expirySelectMobile) {
+        expirySelectMobile.addEventListener('change', (e) => {
+            syncSelects(expirySelectMobile, expirySelect);
+        });
+    }
+
+    if (expiryDisplayMobile && expirySelectMobile) {
+        expiryDisplayMobile.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            const tempSelect = document.createElement('select');
+            tempSelect.innerHTML = expirySelectMobile.innerHTML;
+            tempSelect.value = expirySelectMobile.value;
+            tempSelect.style.position = 'fixed';
+            tempSelect.style.top = '0';
+            tempSelect.style.left = '0';
+            tempSelect.style.width = '100%';
+            tempSelect.style.height = '100%';
+            tempSelect.style.opacity = '0';
+            tempSelect.style.zIndex = '9999';
+            tempSelect.style.cursor = 'pointer';
+            
+            tempSelect.addEventListener('change', (e) => {
+                if (expirySelectMobile && expirySelect) {
+                    expirySelectMobile.value = e.target.value;
+                    expirySelect.value = e.target.value;
+                    updateExpiryLabels();
+                }
+                document.body.removeChild(tempSelect);
+            });
+            
+            tempSelect.addEventListener('blur', () => {
+                if (document.body.contains(tempSelect)) {
+                    document.body.removeChild(tempSelect);
+                }
+            });
+            
+            document.body.appendChild(tempSelect);
+            tempSelect.focus();
+        });
+    }
+
+    updateExpiryLabels();
+
     const params = new URLSearchParams(window.location.search);
     const warning = document.getElementById("warning");
     const warningText = document.getElementById("warning-text");
@@ -290,230 +494,250 @@ document.addEventListener('DOMContentLoaded', () => {
             message = "Erro interno 🌱";
         }
 
-        warningText.textContent = message;
+        if (warningText) {
+            warningText.textContent = message;
+        }
 
-        warning.classList.remove("hidden");
+        if (warning) {
+            warning.classList.remove("hidden");
 
-        requestAnimationFrame(() => {
-            warning.classList.remove("opacity-0", "-translate-y-4");
-        });
+            requestAnimationFrame(() => {
+                warning.classList.remove("opacity-0", "-translate-y-4");
+            });
 
-        setTimeout(() => {
-            warning.classList.add("opacity-0", "-translate-y-4");
-            setTimeout(() => warning.classList.add("hidden"), 300);
-        }, 4000);
+            setTimeout(() => {
+                warning.classList.add("opacity-0", "-translate-y-4");
+                setTimeout(() => warning.classList.add("hidden"), 300);
+            }, 4000);
+        }
 
         window.history.replaceState({}, document.title, "/");
     }
 
-    input.addEventListener('input', () => {
-        input.classList.remove('url-error');
-    });
-
-    input.addEventListener('blur', () => {
-        const url = input.value.trim();
-        if (url && !isValidUrl(formatUrl(url))) {
-            input.classList.add('url-error');
-            showToast("URL inválida 🌱");
-        } else {
+    if (input) {
+        input.addEventListener('input', () => {
             input.classList.remove('url-error');
-        }
-    });
+        });
 
-    expirySelect.addEventListener('change', (e) => {
-        const value = e.target.value;
-        if (value === '3600') expiryText.textContent = '1h';
-        else if (value === '86400') expiryText.textContent = '1d';
-        else if (value === '604800') expiryText.textContent = '7d';
-    });
+        input.addEventListener('blur', () => {
+            const url = input.value.trim();
+            if (url && !isValidUrl(formatUrl(url))) {
+                input.classList.add('url-error');
+                showToast("URL inválida 🌱");
+            } else {
+                input.classList.remove('url-error');
+            }
+        });
 
-    shortenBtn.onclick = async () => {
-        let url = input.value.trim();
-        
-        if (!url) {
-            showToast("Digite um link 🌿");
-            input.classList.add('url-error');
-            input.focus();
-            return;
-        }
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && shortenBtn) {
+                shortenBtn.click();
+            }
+        });
+    }
 
-        url = formatUrl(url);
-
-        if (!isValidUrl(url)) {
-            showToast("URL inválida 🌱");
-            input.classList.add('url-error');
-            input.focus();
-            return;
-        }
-
-        try {
-            const urlObj = new URL(url);
-            if (!urlObj.hostname.includes('.')) {
-                showToast("Domínio inválido 🌱");
+    if (shortenBtn) {
+        shortenBtn.onclick = async () => {
+            if (!input) return;
+            
+            let url = input.value.trim();
+            
+            if (!url) {
+                showToast("Digite um link 🌿");
                 input.classList.add('url-error');
                 input.focus();
                 return;
             }
-        } catch {
-            showToast("URL inválida 🌱");
-            input.classList.add('url-error');
-            input.focus();
-            return;
-        }
 
-        input.classList.remove('url-error');
+            url = formatUrl(url);
 
-        shortenBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span><span>Semeando...</span>';
-        shortenBtn.disabled = true;
-
-        try {
-            const res = await fetch('/api/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    url, 
-                    expiresIn: parseInt(expirySelect.value) 
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.shortUrl) {
-                currentShortUrl = data.shortUrl;
-                
-                shortUrlText.textContent = currentShortUrl;
-                
-                results.classList.remove('hidden');
-                input.value = "";
-
-                const qrUrl = currentShortUrl.startsWith('http') 
-                    ? currentShortUrl 
-                    : 'https://' + currentShortUrl;
-                
-                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=2d4d3c&bgcolor=ffffff&data=${encodeURIComponent(qrUrl)}`;
-                qrLinkText.textContent = currentShortUrl;
-                
-                results.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                showToast("Erro ao encurtar link 🌱");
+            if (!isValidUrl(url)) {
+                showToast("URL inválida 🌱");
+                input.classList.add('url-error');
+                input.focus();
+                return;
             }
-        } catch (error) {
-            showToast("Erro na conexão 🌱");
-            console.error(error);
-        } finally {
-            shortenBtn.innerHTML = '<span class="material-symbols-outlined">magic_button</span><span>Encurtar</span>';
-            shortenBtn.disabled = false;
-        }
-    };
 
-    document.getElementById('copy-btn').onclick = () => {
-        if (!currentShortUrl) return;
-        navigator.clipboard.writeText(currentShortUrl);
-        showToast("Link copiado 🌿");
-    };
-
-    document.getElementById('share-btn').onclick = async () => {
-        if (!currentShortUrl) return;
-        
-        const message = `🌿 Encurtei um link com Sap.io\nPule caminhos com simplicidade:\n${currentShortUrl}`;
-
-        if (navigator.share) {
             try {
-                await navigator.share({
-                    title: "Sap.io Link",
-                    text: message,
-                    url: currentShortUrl.startsWith('http') 
-                        ? currentShortUrl 
-                        : 'https://' + currentShortUrl
-                });
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    navigator.clipboard.writeText(message);
-                    showToast("Mensagem copiada 🌱");
+                const urlObj = new URL(url);
+                if (!urlObj.hostname.includes('.')) {
+                    showToast("Domínio inválido 🌱");
+                    input.classList.add('url-error');
+                    input.focus();
+                    return;
                 }
+            } catch {
+                showToast("URL inválida 🌱");
+                input.classList.add('url-error');
+                input.focus();
+                return;
             }
-        } else {
-            navigator.clipboard.writeText(message);
-            showToast("Mensagem copiada 🌱");
-        }
-    };
 
-    document.getElementById('go-btn').onclick = () => {
-        if (!currentShortUrl) return;
-        // Para abrir, adiciona https://
-        const fullUrl = currentShortUrl.startsWith('http') 
-            ? currentShortUrl 
-            : 'https://' + currentShortUrl;
-        window.open(fullUrl, '_blank');
-    };
+            input.classList.remove('url-error');
 
-    document.getElementById('qr-btn').onclick = () => {
-        if (!currentShortUrl) {
-            showToast("Encurte um link primeiro 🌱");
-            return;
-        }
-        document.getElementById('qr-modal').classList.remove('hidden');
-        document.getElementById('qr-modal').classList.add('flex');
-    };
+            const activeExpiryValue = window.innerWidth <= 640 && expirySelectMobile 
+                ? parseInt(expirySelectMobile.value) 
+                : parseInt(expirySelect?.value || '3600');
 
-    document.getElementById('download-qr').onclick = async () => {
-        if (!qrImage.src || !currentShortUrl) {
-            showToast("Nenhum QR disponível 🌱");
-            return;
-        }
+            shortenBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span><span>Semeando...</span>';
+            shortenBtn.disabled = true;
 
-        try {
-            const response = await fetch(qrImage.src);
-            const blob = await response.blob();
+            try {
+                const res = await fetch('/api/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        url, 
+                        expiresIn: activeExpiryValue 
+                    })
+                });
 
-            const slug = currentShortUrl.split('/').pop();
-            const filename = `sap.io-${slug}.png`;
+                const data = await res.json();
+
+                if (data.shortUrl && shortUrlText && results && qrImage && qrLinkText) {
+                    currentShortUrl = data.shortUrl;
+                    
+                    shortUrlText.textContent = currentShortUrl;
+                    
+                    results.classList.remove('hidden');
+                    if (input) input.value = "";
+
+                    const qrUrl = currentShortUrl.startsWith('http') 
+                        ? currentShortUrl 
+                        : 'https://' + currentShortUrl;
+                    
+                    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=2d4d3c&bgcolor=ffffff&data=${encodeURIComponent(qrUrl)}`;
+                    qrLinkText.textContent = currentShortUrl;
+                    
+                    results.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    showToast("Erro ao encurtar link 🌱");
+                }
+            } catch (error) {
+                showToast("Erro na conexão 🌱");
+                console.error(error);
+            } finally {
+                shortenBtn.innerHTML = '<span class="material-symbols-outlined">magic_button</span><span>Encurtar</span>';
+                shortenBtn.disabled = false;
+            }
+        };
+    }
+
+    const copyBtn = document.getElementById('copy-btn');
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            if (!currentShortUrl) return;
+            navigator.clipboard.writeText(currentShortUrl);
+            showToast("Link copiado 🌿");
+        };
+    }
+
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.onclick = async () => {
+            if (!currentShortUrl) return;
             
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+            const message = `🌿 Encurtei um link com Sap.io\nPule caminhos com simplicidade:\n${currentShortUrl}`;
 
-            window.URL.revokeObjectURL(url);
-            showToast("QR Code baixado 🌿");
-        } catch (err) {
-            console.error("Erro ao baixar QR:", err);
-            showToast("Erro ao baixar 🌱");
-        }
-    };
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: "Sap.io Link",
+                        text: message,
+                        url: currentShortUrl.startsWith('http') 
+                            ? currentShortUrl 
+                            : 'https://' + currentShortUrl
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        navigator.clipboard.writeText(message);
+                        showToast("Mensagem copiada 🌱");
+                    }
+                }
+            } else {
+                navigator.clipboard.writeText(message);
+                showToast("Mensagem copiada 🌱");
+            }
+        };
+    }
 
-    document.getElementById('close-modal').onclick = () => {
-        document.getElementById('qr-modal').classList.add('hidden');
-    };
+    const goBtn = document.getElementById('go-btn');
+    if (goBtn) {
+        goBtn.onclick = () => {
+            if (!currentShortUrl) return;
+            const fullUrl = currentShortUrl.startsWith('http') 
+                ? currentShortUrl 
+                : 'https://' + currentShortUrl;
+            window.open(fullUrl, '_blank');
+        };
+    }
 
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            shortenBtn.click();
-        }
-    });
+    const qrBtn = document.getElementById('qr-btn');
+    const qrModal = document.getElementById('qr-modal');
+    if (qrBtn && qrModal) {
+        qrBtn.onclick = () => {
+            if (!currentShortUrl) {
+                showToast("Encurte um link primeiro 🌱");
+                return;
+            }
+            qrModal.classList.remove('hidden');
+            qrModal.classList.add('flex');
+        };
+    }
 
-    const updateExpiryLabel = () => {
-        const value = parseInt(expirySelect.value);
-        if (value === 3600) expiryText.textContent = "1h";
-        else if (value === 86400) expiryText.textContent = "1d";
-        else if (value === 604800) expiryText.textContent = "7d";
-    };
-    
-    expirySelect.addEventListener("change", updateExpiryLabel);
-    updateExpiryLabel();
+    const downloadQr = document.getElementById('download-qr');
+    if (downloadQr) {
+        downloadQr.onclick = async () => {
+            if (!qrImage?.src || !currentShortUrl) {
+                showToast("Nenhum QR disponível 🌱");
+                return;
+            }
+
+            try {
+                const response = await fetch(qrImage.src);
+                const blob = await response.blob();
+
+                const slug = currentShortUrl.split('/').pop();
+                const filename = `sap.io-${slug}.png`;
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                window.URL.revokeObjectURL(url);
+                showToast("QR Code baixado 🌿");
+            } catch (err) {
+                console.error("Erro ao baixar QR:", err);
+                showToast("Erro ao baixar 🌱");
+            }
+        };
+    }
+
+    const closeModal = document.getElementById('close-modal');
+    if (closeModal && qrModal) {
+        closeModal.onclick = () => {
+            qrModal.classList.add('hidden');
+        };
+    }
 
     const frog = document.getElementById("frog-mascot");
-    const gifs = [
-        "assets/froglet_frog_green_idle_by_phewcumber.gif",
-        "assets/froglet_frog_green_jump_by_phewcumber.gif",
-        "assets/froglet_frog_green_croak_by_phewcumber.gif",
-        "assets/froglet_frog_green_attack_by_phewcumber.gif"
-    ];
-    const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
-    frog.src = randomGif;
+    if (frog) {
+        const gifs = [
+            "assets/froglet_frog_green_idle_by_phewcumber.gif",
+            "assets/froglet_frog_green_jump_by_phewcumber.gif",
+            "assets/froglet_frog_green_croak_by_phewcumber.gif",
+            "assets/froglet_frog_green_attack_by_phewcumber.gif"
+        ];
+        const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
+        frog.src = randomGif;
+    }
+
+    window.addEventListener('resize', () => {
+    });
 });
 </script>
 </body>
